@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if student %}Editar Aluno{% else %}Novo Aluno{% endif %} - Sistema de Gestão de Alunos e Mensalidades
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-{% if student %}edit{% else %}plus{% endif %}"></i>
+            {% if student %}Editar Aluno{% else %}Novo Aluno{% endif %}
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="post" class="needs-validation" novalidate>
+            <div class="mb-3">
+                <label for="name" class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ student.name if student else '' }}" required>
+                <div class="invalid-feedback">
+                    Por favor, informe o nome do aluno.
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="birth_date" class="form-label">Data de Nascimento <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="birth_date" name="birth_date" value="{{ student.birth_date.strftime('%Y-%m-%d') if student else '' }}" required>
+                <div class="invalid-feedback">
+                    Por favor, informe a data de nascimento.
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="phone" class="form-label">Telefone/WhatsApp <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fab fa-whatsapp"></i></span>
+                    <input type="tel" class="form-control" id="phone" name="phone" value="{{ student.phone if student else '' }}" placeholder="(99) 99999-9999" required>
+                    <div class="invalid-feedback">
+                        Por favor, informe um número de telefone.
+                    </div>
+                </div>
+                <small class="form-text text-muted">Este número será usado para envio de recibos pelo WhatsApp.</small>
+            </div>
+            
+            <div class="mb-3">
+                <label for="notes" class="form-label">Observações</label>
+                <textarea class="form-control" id="notes" name="notes" rows="3">{{ student.notes if student else '' }}</textarea>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('students') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+{% endblock %}
