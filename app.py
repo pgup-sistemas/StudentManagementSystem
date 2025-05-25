@@ -41,7 +41,7 @@ db.init_app(app)
 # Configure Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager.login_view = 'login' # type: ignore
 login_manager.login_message = 'Por favor, faça login para acessar esta página.'
 login_manager.login_message_category = 'warning'
 
@@ -61,10 +61,9 @@ with app.app_context():
     admin = User.query.filter_by(username='admin').first()
     if not admin:
         from werkzeug.security import generate_password_hash
-        admin = User(
-            username='admin',
-            password_hash=generate_password_hash('admin')  # Default password, should be changed
-        )
+        admin = User()
+        admin.username = 'admin'
+        admin.password_hash = generate_password_hash('admin')  # Default password, should be changed
         db.session.add(admin)
         db.session.commit()
         logging.info("Admin user created")
