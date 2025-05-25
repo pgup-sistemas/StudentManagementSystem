@@ -1,5 +1,6 @@
 import calendar
 from datetime import datetime, date
+from flask import g
 from urllib.parse import quote
 from flask import render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_required, current_user
@@ -73,6 +74,7 @@ def dashboard():
         month=month,
         year=year,
         month_name=MONTH_NAMES[month],
+        months=MONTH_NAMES,
         years=years,
         lesson_types=lesson_types,
         selected_lesson_type_id=lesson_type_id,
