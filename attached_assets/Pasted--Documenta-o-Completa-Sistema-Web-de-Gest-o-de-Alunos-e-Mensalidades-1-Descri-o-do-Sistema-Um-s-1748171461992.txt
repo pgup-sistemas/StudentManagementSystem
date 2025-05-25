@@ -1,0 +1,244 @@
+ Documentação Completa - Sistema Web de Gestão de Alunos e Mensalidades
+1. Descrição do Sistema
+Um sistema web responsivo, focado em mobile, para facilitar o cadastro, controle e gestão de alunos de aulas avulsas de canto, piano, técnica vocal e outras modalidades, com recursos de:
+
+✅ Cadastro e gestão de alunos.
+✅ Controle de tipos de aula.
+✅ Lançamento e gerenciamento de mensalidades.
+✅ Sistema de login e autenticação.
+✅ Envio de recibo de pagamento via WhatsApp.
+✅ Painel (dashboard) para visualização rápida de pagamentos.
+
+2. Requisitos Funcionais
+2.1. Cadastro de Alunos
+Criar, editar e excluir alunos.
+
+Campos obrigatórios:
+
+Nome completo.
+
+Data de nascimento.
+
+Contato (telefone/WhatsApp).
+
+Observações (opcional).
+
+2.2. Cadastro de Tipos de Aula
+Criar, editar e excluir tipos de aula.
+
+Exemplo:
+
+Canto Kids
+
+Canto Lírico
+
+Técnica Vocal
+
+Aula de Piano
+
+Cada tipo pode ter:
+
+Descrição.
+
+Valor padrão (opcional, mas recomendado).
+
+2.3. Controle de Mensalidades
+Lançar mensalidade por aluno e tipo de aula.
+
+Atribuir:
+
+Data de referência (mês e ano).
+
+Valor.
+
+Status: Pendente ou Pago.
+
+Editar ou excluir mensalidades.
+
+Marcar mensalidade como "Paga".
+
+2.4. Sistema de Login e Autenticação
+Acesso ao sistema somente mediante autenticação.
+
+Login e logout seguros.
+
+Recuperação de senha (opcional).
+
+Proteção de rotas: apenas usuários logados podem cadastrar, editar, excluir.
+
+2.5. Painel de Visualização Rápida dos Pagamentos (Dashboard)
+Ao efetuar login, acesso imediato ao dashboard com:
+
+✅ Total de mensalidades pagas no mês.
+
+✅ Total de mensalidades pendentes.
+
+✅ Valor total recebido.
+
+✅ Valor total pendente.
+
+✅ Número de alunos ativos.
+
+Filtros:
+
+✅ Por mês e ano.
+
+✅ Por tipo de aula.
+
+Visual:
+
+✅ Cards coloridos para indicadores.
+
+✅ Gráfico (opcional, mas recomendável).
+
+2.6. Envio de Recibo pelo WhatsApp
+Após marcar a mensalidade como "Paga", opção de:
+
+Gerar recibo automático.
+
+Criar link do WhatsApp com o número do aluno e mensagem pronta.
+
+Mensagem padrão com:
+
+Nome do aluno.
+
+Tipo de aula.
+
+Mês e ano.
+
+Valor.
+
+Status (Pago).
+
+Link gerado:
+https://wa.me/55[DDD][Número]?text=[Mensagem]
+
+3. Requisitos Não-Funcionais
+✅ Sistema responsivo, otimizado para uso em smartphones.
+✅ Backend com Python Flask.
+✅ Frontend com Bootstrap (layout limpo, simples e intuitivo).
+✅ Banco de dados SQLite (suficiente para o escopo).
+✅ Estrutura de segurança com hash de senhas.
+
+4. Tecnologias Recomendadas
+Camada	Tecnologia
+Backend	Flask
+ORM	SQLAlchemy
+Templates	Jinja2 + Bootstrap
+Login	Flask-Login
+Segurança	Werkzeug Security
+Banco de Dados	SQLite
+Frontend	Bootstrap 5
+Responsividade	Bootstrap Grid
+Gráficos (opcional)	Chart.js ou Recharts
+
+5. Estrutura do Banco de Dados
+Tabela: usuarios
+id (PK)
+
+username
+
+senha_hash
+
+Tabela: alunos
+id (PK)
+
+nome
+
+data_nascimento
+
+telefone
+
+observacoes
+
+Tabela: tipos_aula
+id (PK)
+
+nome
+
+descricao
+
+valor_padrao
+
+Tabela: mensalidades
+id (PK)
+
+aluno_id (FK)
+
+tipo_aula_id (FK)
+
+mes_referencia
+
+ano_referencia
+
+valor
+
+status_pagamento (Pago / Pendente)
+
+6. Estrutura de Telas
+Tela	Descrição
+Login	Formulário para autenticação
+Dashboard	Visão rápida dos pagamentos e filtros
+Listagem de Alunos	CRUD completo
+Cadastro de Tipos de Aula	CRUD completo
+Lançamento de Mensalidade	Cadastro de valores e status
+Histórico de Mensalidades	Consulta, edição, exclusão, envio de recibo
+Envio de Recibo	Link gerado automaticamente para WhatsApp
+Logout	Saída segura do sistema
+
+7. Fluxos Principais
+7.1. Cadastro e Gerenciamento de Alunos
+Acessar "Alunos".
+
+Criar novo ou editar existente.
+
+Cadastrar telefone para envio de recibos.
+
+7.2. Lançamento de Mensalidade
+Selecionar aluno.
+
+Escolher tipo de aula.
+
+Definir mês/ano.
+
+Definir valor (ou usar valor padrão).
+
+Definir status.
+
+7.3. Marcar como Paga e Enviar Recibo
+Atualizar status para "Paga".
+
+Gerar botão/link: "Enviar Recibo".
+
+Clicar → abrir WhatsApp com mensagem pronta.
+
+7.4. Visualização no Dashboard
+Acessar após login.
+
+Ver:
+
+Quantidade de pagas.
+
+Quantidade de pendentes.
+
+Totais em valores.
+
+Filtros por mês e tipo.
+
+8. Segurança
+✅ Proteção de rotas com @login_required.
+✅ Hash seguro de senhas com generate_password_hash.
+✅ Armazenamento seguro no banco.
+✅ (Opcional) CSRF protection com Flask-WTF.
+
+9. Usabilidade
+✅ Layout simples e limpo, focado no uso por celular.
+✅ Botões grandes e fáceis de clicar.
+✅ Feedback visual com cores: verde (pago), vermelho (pendente).
+✅ Mensagens flash para confirmar ações (salvo, excluído, erro).
+
+10. Considerações Finais
+✅ Sistema totalmente adaptado à rotina de aulas avulsas.
+✅ Permite controle financeiro e gestão de pagamentos.
+✅ Facilidade de comunicação via WhatsApp.
+✅ Responsivo, seguro e eficiente.
