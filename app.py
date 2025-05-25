@@ -21,8 +21,10 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for
 
 # Set 'now' variable for all templates
 @app.context_processor
-def inject_now():
-    return {'now': datetime.now()}
+def inject_globals():
+    return {
+        'now': datetime.now()
+    }
 
 # Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///music_school.db")

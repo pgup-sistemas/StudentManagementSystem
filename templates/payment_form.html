@@ -51,7 +51,7 @@
                     <label for="reference_month" class="form-label">Mês de Referência <span class="text-danger">*</span></label>
                     <select class="form-select" id="reference_month" name="reference_month" required>
                         {% for month_num, month_name in months.items() %}
-                        <option value="{{ month_num }}" {% if payment and payment.reference_month == month_num %}selected{% elif not payment and month_num == now().month %}selected{% endif %}>
+                        <option value="{{ month_num }}" {% if payment and payment.reference_month == month_num %}selected{% elif not payment and month_num == now.month %}selected{% endif %}>
                             {{ month_name }}
                         </option>
                         {% endfor %}
@@ -65,7 +65,7 @@
                     <label for="reference_year" class="form-label">Ano de Referência <span class="text-danger">*</span></label>
                     <select class="form-select" id="reference_year" name="reference_year" required>
                         {% for year in years %}
-                        <option value="{{ year }}" {% if payment and payment.reference_year == year %}selected{% elif not payment and year == now().year %}selected{% endif %}>
+                        <option value="{{ year }}" {% if payment and payment.reference_year == year %}selected{% elif not payment and year == now.year %}selected{% endif %}>
                             {{ year }}
                         </option>
                         {% endfor %}

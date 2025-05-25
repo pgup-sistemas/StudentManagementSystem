@@ -141,12 +141,11 @@ def new_student():
             flash('Data de nascimento inválida.', 'danger')
             return render_template('student_form.html')
         
-        student = Student(
-            name=name,
-            birth_date=birth_date,
-            phone=phone,
-            notes=notes
-        )
+        student = Student()
+        student.name = name
+        student.birth_date = birth_date
+        student.phone = phone
+        student.notes = notes
         
         db.session.add(student)
         db.session.commit()
@@ -233,11 +232,10 @@ def new_lesson_type():
                 flash('Valor padrão inválido.', 'danger')
                 return render_template('lesson_type_form.html')
         
-        lesson_type = LessonType(
-            name=name,
-            description=description,
-            default_price=default_price
-        )
+        lesson_type = LessonType()
+        lesson_type.name = name
+        lesson_type.description = description
+        lesson_type.default_price = default_price
         
         db.session.add(lesson_type)
         db.session.commit()
@@ -391,15 +389,14 @@ def new_payment():
             years = list(range(current_year - 5, current_year + 2))
             return render_template('payment_form.html', students=students, lesson_types=lesson_types, months=MONTH_NAMES, years=years)
         
-        payment = Payment(
-            student_id=student_id,
-            lesson_type_id=lesson_type_id,
-            reference_month=reference_month,
-            reference_year=reference_year,
-            amount=amount,
-            status=status,
-            payment_date=datetime.now() if status == 'Pago' else None
-        )
+        payment = Payment()
+        payment.student_id = student_id
+        payment.lesson_type_id = lesson_type_id
+        payment.reference_month = reference_month
+        payment.reference_year = reference_year
+        payment.amount = amount
+        payment.status = status
+        payment.payment_date = datetime.now() if status == 'Pago' else None
         
         db.session.add(payment)
         db.session.commit()
