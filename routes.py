@@ -1,12 +1,15 @@
 import calendar
+import os
+import uuid
 from datetime import datetime, date
 from flask import g
 from urllib.parse import quote
-from flask import render_template, redirect, url_for, request, flash, jsonify
+from flask import render_template, redirect, url_for, request, flash, jsonify, send_from_directory
 from flask_login import login_required, current_user
 from sqlalchemy import extract, func
+from werkzeug.utils import secure_filename
 from app import app, db
-from models import Student, LessonType, Payment
+from models import Student, LessonType, Payment, Notification, File, User
 
 # Month names in Portuguese
 MONTH_NAMES = {
@@ -14,6 +17,33 @@ MONTH_NAMES = {
     5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto', 
     9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'
 }
+
+# File upload helper functions
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+def get_file_type(filename):
+    ext = filename.rsplit('.', 1)[1].lower()
+    if ext in ['pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx']:
+        return 'Documento'
+    elif ext in ['jpg', 'jpeg', 'png', 'gif']:
+        return 'Imagem'
+    elif ext in ['mp3', 'wav', 'ogg']:
+        return 'Áudio'
+    elif ext in ['mp4', 'avi', 'mov']:
+        return 'Vídeo'
+    else:
+        return 'Outro'
+
+def save_file(file):
+    """Save the file with a unique filename and return the path"""
+    filename = secure_filename(file.filename)
+    # Create a unique filename to prevent overwriting
+    unique_filename = f"{uuid.uuid4()}_{filename}"
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+    file.save(file_path)
+    # Return the relative path to be stored in the database
+    return f"uploads/files/{unique_filename}"
 
 @app.route('/')
 def index():

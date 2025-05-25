@@ -34,6 +34,17 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
 }
 
+# File upload configuration
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/uploads/files')
+app.config['TEMP_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/uploads/temp')
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB limit
+app.config['ALLOWED_EXTENSIONS'] = {
+    'pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx',  # Documents
+    'jpg', 'jpeg', 'png', 'gif',                 # Images
+    'mp3', 'wav', 'ogg',                         # Audio
+    'mp4', 'avi', 'mov'                          # Video
+}
+
 # Initialize SQLAlchemy
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)

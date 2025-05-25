@@ -1,0 +1,132 @@
+Funcionalidades de Notificação, Envio em Grupo e Upload de Arquivos
+11. Funcionalidades Adicionais
+✅ 11.1. Envio de Mensagens de Notificação para Alunos
+Objetivo:
+Permitir o envio de mensagens automáticas ou manuais aos alunos com finalidades diversas, via WhatsApp.
+
+Tipos de Notificação:
+✅ Cobrança → lembrar sobre pagamento pendente.
+
+✅ Lembrete de Aula → lembrar sobre próxima aula agendada.
+
+✅ Avisos Gerais → informar sobre novas turmas, mudanças de horário ou local.
+
+✅ 11.2. Envio de Mensagens: Individual ou em Grupo
+Funcionalidades:
+
+Tipo de envio	Descrição
+Individual	Escolher um aluno e enviar uma notificação específica.
+Em Grupo	Selecionar múltiplos alunos ou grupo de alunos (por tipo de aula ou turma) e enviar a mesma mensagem a todos.
+
+Como será feito:
+Geração de links dinâmicos de WhatsApp:
+Exemplo: https://wa.me/55[DDD][Número]?text=[Mensagem personalizada]
+
+Para envio em massa, abrir várias abas ou usar recurso de mensagens pré-configuradas.
+
+✅ 11.3. Upload de Arquivos para Alunos
+Objetivo:
+Permitir o envio de materiais didáticos:
+✅ Partituras
+✅ PDFs com exercícios
+✅ Áudios
+✅ Vídeos
+
+Funcionalidades:
+
+✅ Upload de arquivo associado ao aluno ou a um grupo/turma.
+
+✅ Listagem de arquivos enviados.
+
+✅ Link para download ou compartilhamento via WhatsApp.
+
+Limite recomendado de arquivo:
+
+Até 10 MB (ajustável conforme servidor).
+
+✅ 11.4. Modelos de Dados (Database Models)
+Tabela: notificacoes
+Campo	Tipo
+id	Integer, PK
+titulo	String
+mensagem	Text
+tipo	Enum("Cobrança", "Lembrete", "Aviso")
+data_envio	DateTime
+aluno_id	FK (nullable para envio em grupo)
+grupo	String (opcional)
+status	Enum("Enviada", "Pendente")
+
+Tabela: arquivos
+Campo	Tipo
+id	Integer, PK
+nome	String
+descricao	Text (opcional)
+caminho_arquivo	String
+data_upload	DateTime
+aluno_id	FK (nullable)
+grupo	String (opcional)
+enviado_por	FK (usuário que fez o upload)
+
+✅ Fluxos Detalhados
+Fluxo: Envio de Notificação Individual
+Selecionar aluno.
+
+Escolher tipo de mensagem: cobrança, lembrete, aviso.
+
+Personalizar ou usar modelo padrão.
+
+Gerar link do WhatsApp.
+
+Clicar e enviar.
+
+Fluxo: Envio de Notificação em Grupo
+Selecionar grupo de alunos (por tipo de aula ou manualmente).
+
+Digitar mensagem ou escolher modelo.
+
+Gerar links individuais ou copiar lista para envio.
+
+Fluxo: Upload de Arquivo para Aluno ou Grupo
+Selecionar se é para aluno ou grupo.
+
+Escolher arquivo no dispositivo.
+
+Adicionar descrição (opcional).
+
+Fazer upload.
+
+Arquivo fica disponível na área de downloads do aluno ou grupo.
+
+✅ 12. Funcionalidade de Exportação de Dados
+Objetivo:
+Permitir que o administrador exporte dados importantes do sistema para formatos Excel (.xlsx) e PDF, visando facilitar:
+
+✅ Controle financeiro.
+✅ Análises administrativas.
+✅ Impressões físicas ou arquivamento digital.
+
+✅ 12.1. Tipos de Relatórios para Exportação
+Relatórios disponíveis:
+Relatório	Descrição
+Mensalidades	Lista de mensalidades (pagas e pendentes) filtradas por período, aluno ou tipo de aula.
+Alunos	Lista completa de alunos cadastrados com dados de contato.
+Arquivos enviados	Histórico de materiais enviados a cada aluno ou grupo.
+Notificações	Histórico de notificações enviadas (data, tipo, destinatário).
+
+✅ 12.2. Formatos de Exportação
+Formato	Biblioteca Recomendadas
+Excel (.xlsx)	pandas + openpyxl
+PDF (.pdf)	reportlab ou WeasyPrint (para HTML → PDF)
+
+✅ 12.3. Fluxo de Exportação
+1️⃣ Acessar a seção de Relatórios no sistema.
+2️⃣ Escolher o tipo de relatório desejado.
+3️⃣ Aplicar filtros (opcional):
+
+Período (mês, ano).
+
+Tipo de aula.
+
+Situação do pagamento.
+4️⃣ Escolher o formato: Excel ou PDF.
+5️⃣ Clicar em "Exportar" → o sistema gera e faz download automático.
