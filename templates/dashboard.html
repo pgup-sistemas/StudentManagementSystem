@@ -1,184 +1,549 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Sistema de Gestão de Alunos e Mensalidades{% endblock %}
+{% block title %}Dashboard - Sonaris - Sistema de Gestão Escolar{% endblock %}
 
 {% block extra_css %}
 <style>
-    .card-dashboard {
+    :root {
+        --primary-dark: #1e293b;
+        --primary-blue: #334155;
+        --gray-50: #f8fafc;
+        --gray-100: #f1f5f9;
+        --gray-200: #e2e8f0;
+        --gray-300: #cbd5e1;
+        --gray-400: #94a3b8;
+        --gray-500: #64748b;
+        --gray-600: #475569;
+        --gray-700: #334155;
+        --gray-800: #1e293b;
+        --gray-900: #0f172a;
+        --success: #059669;
+        --danger: #dc2626;
+        --warning: #d97706;
+        --info: #0284c7;
+    }
+
+    body {
+        background: var(--gray-100);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .dashboard-container {
+        padding: 2rem 1rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .dashboard-header {
+        margin-bottom: 2rem;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .dashboard-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin: 0;
+        letter-spacing: -0.025em;
+    }
+
+    .dashboard-title i {
+        color: var(--gray-600);
+        margin-right: 0.75rem;
+    }
+
+    /* Filter Card */
+    .filter-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 
+            0 4px 6px rgba(0, 0, 0, 0.05),
+            0 1px 3px rgba(0, 0, 0, 0.02),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .filter-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-select {
+        padding: 0.75rem 1rem;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--gray-200);
+        border-radius: 10px;
+        font-size: 0.9375rem;
+        color: var(--gray-900);
+        transition: all 0.2s ease;
+        backdrop-filter: blur(8px);
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: var(--gray-400);
+        background: rgba(255, 255, 255, 1);
+        box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        padding-top: 1rem;
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .btn-export {
+        padding: 0.625rem 1.25rem;
         border: none;
         border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    .card-dashboard:hover {
+
+    .btn-pdf {
+        background: rgba(220, 38, 38, 0.9);
+        color: white;
+    }
+
+    .btn-excel {
+        background: rgba(5, 150, 105, 0.9);
+        color: white;
+    }
+
+    .btn-export:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        color: white;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 
+            0 4px 6px rgba(0, 0, 0, 0.05),
+            0 1px 3px rgba(0, 0, 0, 0.02),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
         transform: translateY(-5px);
+        box-shadow: 
+            0 10px 25px rgba(0, 0, 0, 0.1),
+            0 4px 6px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
     }
-    .card-icon {
-        font-size: 2.5rem;
-        margin-bottom: 15px;
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        transition: all 0.3s ease;
     }
-    .card-paid {
-        background-color: #d1e7dd;
-        color: #0f5132;
+
+    .stat-card.paid::before {
+        background: var(--success);
     }
-    .card-pending {
-        background-color: #f8d7da;
-        color: #842029;
+
+    .stat-card.pending::before {
+        background: var(--danger);
     }
-    .card-total {
-        background-color: #cfe2ff;
-        color: #084298;
+
+    .stat-card.total::before {
+        background: var(--info);
     }
-    .card-students {
-        background-color: #e2e3e5;
-        color: #41464b;
+
+    .stat-card.students::before {
+        background: var(--gray-600);
     }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card.paid .stat-icon {
+        background: rgba(5, 150, 105, 0.1);
+        color: var(--success);
+    }
+
+    .stat-card.pending .stat-icon {
+        background: rgba(220, 38, 38, 0.1);
+        color: var(--danger);
+    }
+
+    .stat-card.total .stat-icon {
+        background: rgba(2, 132, 199, 0.1);
+        color: var(--info);
+    }
+
+    .stat-card.students .stat-icon {
+        background: rgba(100, 116, 139, 0.1);
+        color: var(--gray-600);
+    }
+
+    .stat-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-600);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin: 0;
+    }
+
+    /* Chart Section */
+    .chart-section {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 
+            0 4px 6px rgba(0, 0, 0, 0.05),
+            0 1px 3px rgba(0, 0, 0, 0.02),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .chart-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .chart-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0;
+    }
+
+    .chart-title i {
+        color: var(--gray-600);
+        margin-right: 0.5rem;
+    }
+
     .chart-container {
         height: 400px;
-        margin-top: 30px;
+        position: relative;
     }
-    .dashboard-title {
-        margin-bottom: 30px;
-        border-bottom: 2px solid #e9ecef;
-        padding-bottom: 15px;
+
+    /* Summary Cards */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
     }
-    @media (max-width: 767.98px) {
-        .card-dashboard {
-            margin-bottom: 20px;
+
+    .summary-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 
+            0 4px 6px rgba(0, 0, 0, 0.05),
+            0 1px 3px rgba(0, 0, 0, 0.02),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 
+            0 8px 16px rgba(0, 0, 0, 0.1),
+            0 2px 4px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+
+    .summary-header {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: white;
+        display: flex;
+        align-items: center;
+    }
+
+    .summary-header.success {
+        background: var(--success);
+    }
+
+    .summary-header.danger {
+        background: var(--danger);
+    }
+
+    .summary-body {
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .summary-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .summary-value.success {
+        color: var(--success);
+    }
+
+    .summary-value.danger {
+        color: var(--danger);
+    }
+
+    .summary-period {
+        font-size: 0.875rem;
+        color: var(--gray-500);
+        font-weight: 500;
+    }
+
+    .alert {
+        background: rgba(239, 246, 255, 0.8);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        color: var(--gray-700);
+        padding: 0.875rem 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        backdrop-filter: blur(8px);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 1rem;
+        }
+
+        .filter-form {
+            grid-template-columns: 1fr;
+        }
+
+        .export-buttons {
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-title {
+            font-size: 1.75rem;
+        }
+    }
+
+    /* Animations */
+    .stat-card, .filter-card, .chart-section, .summary-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="dashboard-header">
         <h1 class="dashboard-title">
-            <i class="fas fa-chart-line"></i> Dashboard
+            <i class="fas fa-chart-line"></i>
+            Dashboard
         </h1>
     </div>
-</div>
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <form id="filterForm" method="get" class="row g-3">
-                    <div class="col-md-4">
-                        <label for="month" class="form-label">Mês</label>
-                        <select class="form-select" id="month" name="month" onchange="this.form.submit()">
-                            {% for month_num, month_name in months.items() %}
-                            <option value="{{ month_num }}" {% if month == month_num %}selected{% endif %}>{{ month_name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="year" class="form-label">Ano</label>
-                        <select class="form-select" id="year" name="year" onchange="this.form.submit()">
-                            {% for y in years %}
-                            <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="lesson_type_id" class="form-label">Tipo de Aula</label>
-                        <select class="form-select" id="lesson_type_id" name="lesson_type_id" onchange="this.form.submit()">
-                            <option value="">Todos</option>
-                            {% for type in lesson_types %}
-                            <option value="{{ type.id }}" {% if selected_lesson_type_id == type.id %}selected{% endif %}>{{ type.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </form>
+    <!-- Filters -->
+    <div class="filter-card">
+        <form id="filterForm" method="get" class="filter-form">
+            <div class="form-group">
+                <label for="month" class="form-label">Mês</label>
+                <select class="form-select" id="month" name="month" onchange="this.form.submit()">
+                    {% for month_num, month_name in months.items() %}
+                    <option value="{{ month_num }}" {% if month == month_num %}selected{% endif %}>{{ month_name }}</option>
+                    {% endfor %}
+                </select>
             </div>
+            <div class="form-group">
+                <label for="year" class="form-label">Ano</label>
+                <select class="form-select" id="year" name="year" onchange="this.form.submit()">
+                    {% for y in years %}
+                    <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="lesson_type_id" class="form-label">Tipo de Aula</label>
+                <select class="form-select" id="lesson_type_id" name="lesson_type_id" onchange="this.form.submit()">
+                    <option value="">Todos</option>
+                    {% for type in lesson_types %}
+                    <option value="{{ type.id }}" {% if selected_lesson_type_id == type.id %}selected{% endif %}>{{ type.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+        
+        <div class="export-buttons">
+            <a href="{{ url_for('main.export_dashboard_pdf') }}?month={{ month }}&year={{ year }}{% if selected_lesson_type_id %}&lesson_type_id={{ selected_lesson_type_id }}{% endif %}" 
+               class="btn-export btn-pdf">
+                <i class="fas fa-file-pdf me-2"></i>Exportar PDF
+            </a>
+            <a href="{{ url_for('main.export_dashboard_excel') }}?month={{ month }}&year={{ year }}{% if selected_lesson_type_id %}&lesson_type_id={{ selected_lesson_type_id }}{% endif %}" 
+               class="btn-export btn-excel">
+                <i class="fas fa-file-excel me-2"></i>Exportar Excel
+            </a>
         </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-md-6 col-lg-3 mb-4">
-        <div class="card card-dashboard card-paid h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-check-circle card-icon"></i>
-                <h5 class="card-title">Mensalidades Pagas</h5>
-                <h2 class="card-text">{{ paid_count }}</h2>
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card paid">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
             </div>
+            <div class="stat-title">Mensalidades Pagas</div>
+            <div class="stat-value">{{ paid_count }}</div>
+        </div>
+        
+        <div class="stat-card pending">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="stat-title">Mensalidades Pendentes</div>
+            <div class="stat-value">{{ pending_count }}</div>
+        </div>
+        
+        <div class="stat-card total">
+            <div class="stat-icon">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-title">Valor Recebido</div>
+            <div class="stat-value">R$ {{ '%.2f'|format(total_paid)|replace('.', ',') }}</div>
+        </div>
+        
+        <div class="stat-card students">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-title">Alunos Ativos</div>
+            <div class="stat-value">{{ active_students }}</div>
         </div>
     </div>
-    <div class="col-md-6 col-lg-3 mb-4">
-        <div class="card card-dashboard card-pending h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-exclamation-circle card-icon"></i>
-                <h5 class="card-title">Mensalidades Pendentes</h5>
-                <h2 class="card-text">{{ pending_count }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-3 mb-4">
-        <div class="card card-dashboard card-total h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-money-bill-wave card-icon"></i>
-                <h5 class="card-title">Valor Recebido</h5>
-                <h2 class="card-text">R$ {{ '%.2f'|format(total_paid)|replace('.', ',') }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-3 mb-4">
-        <div class="card card-dashboard card-students h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-users card-icon"></i>
-                <h5 class="card-title">Alunos Ativos</h5>
-                <h2 class="card-text">{{ active_students }}</h2>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-chart-bar me-2"></i>Visão Anual - {{ year }}
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="paymentChart"></canvas>
-                </div>
-            </div>
+    <!-- Chart Section -->
+    <div class="chart-section">
+        <div class="chart-header">
+            <h3 class="chart-title">
+                <i class="fas fa-chart-bar"></i>
+                Visão Anual - {{ year }}
+            </h3>
+        </div>
+        <div id="chartDebug" class="alert d-none"></div>
+        <div class="chart-container">
+            <canvas id="paymentChart"></canvas>
         </div>
     </div>
-</div>
 
-<div class="row mt-4">
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header bg-success text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-money-bill-wave me-2"></i>Valor Total Recebido
-                </h5>
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-header success">
+                <i class="fas fa-money-bill-wave me-2"></i>
+                Valor Total Recebido
             </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="display-4 fw-bold text-success me-3">R$ {{ '%.2f'|format(total_paid)|replace('.', ',') }}</div>
-                    <div class="text-muted">{{ month_name }}/{{ year }}</div>
-                </div>
+            <div class="summary-body">
+                <div class="summary-value success">R$ {{ '%.2f'|format(total_paid)|replace('.', ',') }}</div>
+                <div class="summary-period">{{ month_name }}/{{ year }}</div>
             </div>
         </div>
-    </div>
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header bg-danger text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-exclamation-circle me-2"></i>Valor Total Pendente
-                </h5>
+        
+        <div class="summary-card">
+            <div class="summary-header danger">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                Valor Total Pendente
             </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="display-4 fw-bold text-danger me-3">R$ {{ '%.2f'|format(total_pending)|replace('.', ',') }}</div>
-                    <div class="text-muted">{{ month_name }}/{{ year }}</div>
-                </div>
+            <div class="summary-body">
+                <div class="summary-value danger">R$ {{ '%.2f'|format(total_pending)|replace('.', ',') }}</div>
+                <div class="summary-period">{{ month_name }}/{{ year }}</div>
             </div>
         </div>
     </div>
@@ -188,54 +553,96 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Fetch chart data
-    fetch(`/dashboard/chart-data?year={{ year }}`)
-        .then(response => response.json())
-        .then(data => {
-            const ctx = document.getElementById('paymentChart').getContext('2d');
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('paymentChart').getContext('2d');
+        
+        function loadChartData() {
+            const year = document.getElementById('year').value;
+            const lessonTypeId = document.getElementById('lesson_type_id').value;
+            const debugEl = document.getElementById('chartDebug');
             
-            // Extract data for chart
-            const months = data.map(item => item.month);
-            const paidValues = data.map(item => item.paid);
-            const pendingValues = data.map(item => item.pending);
+            debugEl.classList.remove('d-none');
+            debugEl.textContent = 'Carregando dados do gráfico...';
             
-            // Create chart
-            const chart = new Chart(ctx, {
+            let url = `/dashboard/chart-data?year=${year}`;
+            if (lessonTypeId) {
+                url += `&lesson_type_id=${lessonTypeId}`;
+            }
+            
+            fetch(url, {
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Dados recebidos:', data);
+                updateChart(data);
+                debugEl.classList.add('d-none');
+            })
+            .catch(error => {
+                const errorMsg = `Erro ao carregar dados do gráfico: ${error.message}`;
+                console.error(errorMsg);
+                debugEl.textContent = errorMsg;
+                debugEl.classList.remove('alert-info');
+                debugEl.classList.add('alert-danger');
+            });
+        }
+        
+        let paymentChart = null;
+        
+        function updateChart(data) {
+            if (paymentChart) {
+                paymentChart.destroy();
+            }
+            
+            const labels = data.map(item => item.month);
+            const paidData = data.map(item => item.paid);
+            const pendingData = data.map(item => item.pending);
+            
+            paymentChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: months,
+                    labels: labels,
                     datasets: [
                         {
-                            label: 'Valores Pagos',
-                            data: paidValues,
-                            backgroundColor: '#198754',
-                            borderColor: '#0f5132',
-                            borderWidth: 1
+                            label: 'Pago',
+                            data: paidData,
+                            backgroundColor: 'rgba(5, 150, 105, 0.8)',
+                            borderColor: 'rgba(5, 150, 105, 1)',
+                            borderWidth: 2,
+                            borderRadius: 6,
+                            borderSkipped: false,
                         },
                         {
-                            label: 'Valores Pendentes',
-                            data: pendingValues,
-                            backgroundColor: '#dc3545',
-                            borderColor: '#842029',
-                            borderWidth: 1
+                            label: 'Pendente',
+                            data: pendingData,
+                            backgroundColor: 'rgba(220, 38, 38, 0.8)',
+                            borderColor: 'rgba(220, 38, 38, 1)',
+                            borderWidth: 2,
+                            borderRadius: 6,
+                            borderSkipped: false,
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return 'R$ ' + value.toFixed(2).replace('.', ',');
-                                }
-                            }
-                        }
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
                     },
                     plugins: {
                         tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#1e293b',
+                            bodyColor: '#475569',
+                            borderColor: '#e2e8f0',
+                            borderWidth: 1,
+                            cornerRadius: 8,
                             callbacks: {
                                 label: function(context) {
                                     let label = context.dataset.label || '';
@@ -243,16 +650,81 @@
                                         label += ': ';
                                     }
                                     if (context.parsed.y !== null) {
-                                        label += 'R$ ' + context.parsed.y.toFixed(2).replace('.', ',');
+                                        label += new Intl.NumberFormat('pt-BR', { 
+                                            style: 'currency', 
+                                            currency: 'BRL' 
+                                        }).format(context.parsed.y);
                                     }
                                     return label;
                                 }
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(203, 213, 225, 0.3)',
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                                },
+                                font: {
+                                    size: 11
+                                },
+                                color: '#64748b'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Valor (R$)',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                color: '#475569'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                },
+                                color: '#64748b'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Mês',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                color: '#475569'
                             }
                         }
                     }
                 }
             });
-        })
-        .catch(error => console.error('Error fetching chart data:', error));
+        }
+        
+        loadChartData();
+        
+        document.getElementById('year').addEventListener('change', loadChartData);
+        document.getElementById('lesson_type_id').addEventListener('change', loadChartData);
+    });
 </script>
 {% endblock %}

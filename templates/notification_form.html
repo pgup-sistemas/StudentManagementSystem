@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}{% if notification %}Editar{% else %}Nova{% endif %} Notificação - Sonaris - Sistema de Gestão de Alunos e Mensalidades{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3 class="card-title">
+            <i class="fas fa-{% if notification %}edit{% else %}plus{% endif %}"></i>
+            {% if notification %}Editar{% else %}Nova{% endif %} Notificação
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="post" class="needs-validation" novalidate>
+            <div class="mb-3">
+                <label for="title" class="form-label">Título <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="title" name="title" value="{{ notification.title if notification else '' }}" required>
+                <div class="invalid-feedback">
+                    Por favor, informe o título da notificação.
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="notification_type" class="form-label">Tipo de Notificação <span class="text-danger">*</span></label>
+                <select class="form-select" id="notification_type" name="notification_type" required>
+                    <option value="">Selecione o tipo...</option>
+                    <option value="Cobrança" {% if notification and notification.notification_type == 'Cobrança' %}selected{% endif %}>Cobrança</option>
+                    <option value="Lembrete" {% if notification and notification.notification_type == 'Lembrete' %}selected{% endif %}>Lembrete</option>
+                    <option value="Aviso" {% if notification and notification.notification_type == 'Aviso' %}selected{% endif %}>Aviso</option>
+                </select>
+                <div class="invalid-feedback">
+                    Por favor, selecione o tipo de notificação.
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Destinatário <span class="text-danger">*</span></label>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="recipient_type" id="recipient_individual" value="individual" {% if not notification or notification.student_id %}checked{% endif %}>
+                    <label class="form-check-label" for="recipient_individual">
+                        Aluno específico
+                    </label>
+                </div>
+                <select class="form-select mb-3" id="student_id" name="student_id" {% if notification and not notification.student_id %}disabled{% endif %}>
+                    <option value="0">Selecione um aluno...</option>
+                    {% for student in students %}
+                    <option value="{{ student.id }}" {% if notification and notification.student_id == student.id %}selected{% endif %}>{{ student.name }}</option>
+                    {% endfor %}
+                </select>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="recipient_type" id="recipient_group" value="group" {% if notification and notification.lesson_type_id %}checked{% endif %}>
+                    <label class="form-check-label" for="recipient_group">
+                        Grupo de alunos (por tipo de aula)
+                    </label>
+                </div>
+                <select class="form-select mb-3" id="lesson_type_id" name="lesson_type_id" {% if not notification or not notification.lesson_type_id %}disabled{% endif %}>
+                    <option value="0">Selecione um tipo de aula...</option>
+                    {% for lesson_type in lesson_types %}
+                    <option value="{{ lesson_type.id }}" {% if notification and notification.lesson_type_id == lesson_type.id %}selected{% endif %}>{{ lesson_type.name }}</option>
+                    {% endfor %}
+                </select>
+                
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="recipient_type" id="recipient_custom" value="custom" {% if notification and notification.group_name %}checked{% endif %}>
+                    <label class="form-check-label" for="recipient_custom">
+                        Grupo personalizado
+                    </label>
+                </div>
+                <input type="text" class="form-control mb-3" id="group_name" name="group_name" 
+                       placeholder="Digite o nome do grupo" 
+                       value="{{ notification.group_name if notification and notification.group_name else '' }}" 
+                       {% if not notification or not notification.group_name %}disabled{% endif %}>
+            </div>
+            
+            <div class="mb-3">
+                <label for="message" class="form-label">Mensagem <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="message" name="message" rows="6" required>{{ notification.message if notification else '' }}</textarea>
+                <div class="form-text">
+                    Dicas para mensagens eficazes:
+                    <ul>
+                        <li>Seja claro e objetivo</li>
+                        <li>Inclua todas as informações necessárias</li>
+                        <li>Use emojis com moderação</li>
+                    </ul>
+                </div>
+                <div class="invalid-feedback">
+                    Por favor, digite a mensagem da notificação.
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('main.notifications') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Salvar Notificação
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Ativar/desativar campos de acordo com o tipo de destinatário selecionado
+    document.querySelectorAll('input[name="recipient_type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const studentSelect = document.getElementById('student_id');
+            const lessonTypeSelect = document.getElementById('lesson_type_id');
+            const groupNameInput = document.getElementById('group_name');
+            
+            studentSelect.disabled = this.value !== 'individual';
+            lessonTypeSelect.disabled = this.value !== 'group';
+            groupNameInput.disabled = this.value !== 'custom';
+            
+            // Limpar valores quando desabilitados
+            if (studentSelect.disabled) studentSelect.value = '0';
+            if (lessonTypeSelect.disabled) lessonTypeSelect.value = '0';
+            if (groupNameInput.disabled) groupNameInput.value = '';
+        });
+    });
+    
+    // Validação do formulário
+    (function() {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+{% endblock %}

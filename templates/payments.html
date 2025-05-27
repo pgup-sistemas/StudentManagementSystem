@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Mensalidades - Sistema de Gestão de Alunos e Mensalidades{% endblock %}
+{% block title %}Mensalidades - Sonaris - Sonaris de Alunos e Mensalidades{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="fas fa-money-bill-wave"></i> Mensalidades</h1>
-    <a href="{{ url_for('new_payment') }}" class="btn btn-primary">
+    <a href="{{ url_for('main.new_payment') }}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Nova Mensalidade
     </a>
 </div>
@@ -55,7 +55,7 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-filter"></i> Filtrar
                 </button>
-                <a href="{{ url_for('payments') }}" class="btn btn-secondary">
+                <a href="{{ url_for('main.payments') }}" class="btn btn-secondary">
                     <i class="fas fa-broom"></i> Limpar Filtros
                 </a>
             </div>
@@ -94,13 +94,13 @@
                             </td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
-                                    <a href="{{ url_for('edit_payment', id=payment.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{{ url_for('main.edit_payment', id=payment.id) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ payment.id }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                    <form action="{{ url_for('toggle_payment_status', id=payment.id) }}" method="post" class="d-inline">
+                                    <form action="{{ url_for('main.toggle_payment_status', id=payment.id) }}" method="post" class="d-inline">
                                         {% if payment.status == 'Pendente' %}
                                         <button type="submit" class="btn btn-sm btn-outline-success" title="Marcar como Pago">
                                             <i class="fas fa-check"></i>
@@ -112,7 +112,7 @@
                                         {% endif %}
                                     </form>
                                     {% if payment.status == 'Pago' %}
-                                    <a href="{{ url_for('payment_receipt', id=payment.id) }}" class="btn btn-sm btn-outline-success" title="Enviar Recibo">
+                                    <a href="{{ url_for('main.payment_receipt', id=payment.id) }}" class="btn btn-sm btn-outline-success" title="Enviar Recibo">
                                         <i class="fab fa-whatsapp"></i>
                                     </a>
                                     {% endif %}
@@ -138,7 +138,7 @@
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                <form action="{{ url_for('delete_payment', id=payment.id) }}" method="post">
+                                                <form action="{{ url_for('main.delete_payment', id=payment.id) }}" method="post">
                                                     <button type="submit" class="btn btn-danger">Excluir</button>
                                                 </form>
                                             </div>

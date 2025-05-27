@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if lesson_type %}Editar Tipo de Aula{% else %}Novo Tipo de Aula{% endif %} - Sistema de Gestão de Alunos e Mensalidades
+    {% if lesson_type %}Editar Tipo de Aula{% else %}Novo Tipo de Aula{% endif %} - Sonaris - Sonaris de Alunos e Mensalidades
 {% endblock %}
 
 {% block content %}
@@ -37,7 +37,7 @@
             </div>
             
             <div class="d-flex justify-content-between">
-                <a href="{{ url_for('lesson_types') }}" class="btn btn-secondary">
+                <a href="{{ url_for('main.lesson_types') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Voltar
                 </a>
                 <button type="submit" class="btn btn-primary">

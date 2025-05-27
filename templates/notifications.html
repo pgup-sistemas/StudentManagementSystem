@@ -1,27 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}Notificações - Sistema de Gestão de Alunos e Mensalidades{% endblock %}
+{% block title %}Notificações - Sonaris - Sistema de Gestão de Alunos e Mensalidades{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="fas fa-bell"></i> Notificações</h1>
-    <a href="{{ url_for('new_notification') }}" class="btn btn-primary">
+    <a href="{{ url_for('main.new_notification') }}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Nova Notificação
     </a>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header bg-primary text-white">
+<div class="card mb-2">
+    <div class="card-header bg-secondary text-white">
         <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informações</h5>
     </div>
     <div class="card-body">
-        <p>Aqui você pode criar e enviar notificações para os alunos via WhatsApp. Tipos de notificação:</p>
+        <span>Aqui você pode criar e enviar notificações para os alunos via WhatsApp. Tipos de notificação:</span>
         <ul>
             <li><strong>Cobrança:</strong> Para lembrar sobre pagamentos pendentes</li>
             <li><strong>Lembrete:</strong> Para lembrar sobre aulas agendadas</li>
             <li><strong>Aviso:</strong> Para informações gerais, mudanças de horário, etc.</li>
         </ul>
-        <p>As notificações podem ser enviadas para um aluno específico, para todos os alunos de um tipo de aula, ou para todos os alunos.</p>
+        <span>As notificações podem ser enviadas para um aluno específico, para todos os alunos de um tipo de aula, ou para todos os alunos.</span>
     </div>
 </div>
 
@@ -55,9 +55,13 @@
                             </td>
                             <td>
                                 {% if notification.student %}
-                                <span class="badge bg-primary">Individual</span> {{ notification.student.name }}
+                                    <span class="badge bg-primary">Individual</span> {{ notification.student.name }}
+                                {% elif notification.lesson_type %}
+                                    <span class="badge bg-info">Tipo de Aula</span> {{ notification.lesson_type.name }}
                                 {% elif notification.group_name %}
-                                <span class="badge bg-success">Grupo</span> {{ notification.group_name }}
+                                    <span class="badge bg-success">Grupo</span> {{ notification.group_name }}
+                                {% else %}
+                                    <span class="badge bg-secondary">Não especificado</span>
                                 {% endif %}
                             </td>
                             <td>{{ notification.sent_date.strftime('%d/%m/%Y %H:%M') }}</td>
@@ -71,7 +75,7 @@
                             <td class="text-center">
                                 <div class="btn-group" role="group">
                                     {% if notification.status == 'Pendente' %}
-                                    <a href="{{ url_for('send_notification', id=notification.id) }}" class="btn btn-sm btn-success" title="Enviar">
+                                    <a href="{{ url_for('main.send_notification', id=notification.id) }}" class="btn btn-sm btn-success" title="Enviar">
                                         <i class="fab fa-whatsapp"></i>
                                     </a>
                                     {% endif %}
@@ -98,7 +102,7 @@
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                <form action="{{ url_for('delete_notification', id=notification.id) }}" method="post">
+                                                <form action="{{ url_for('main.delete_notification', id=notification.id) }}" method="post">
                                                     <button type="submit" class="btn btn-danger">Excluir</button>
                                                 </form>
                                             </div>

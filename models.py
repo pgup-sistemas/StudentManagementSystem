@@ -1,7 +1,8 @@
 from datetime import datetime
 import os
-from app import db
+from __init__ import db  # Importação absoluta
 from flask_login import UserMixin
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -19,6 +20,14 @@ class User(UserMixin, db.Model):
     
     def __repr__(self):
         return f'<User {self.username}>'
+    
+    def set_password(self, password):
+        from werkzeug.security import generate_password_hash
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        from werkzeug.security import check_password_hash
+        return check_password_hash(self.password_hash, password)
 
 class Student(db.Model):
     __tablename__ = 'students'
@@ -33,6 +42,8 @@ class Student(db.Model):
     payments = db.relationship('Payment', backref='student', lazy=True, cascade="all, delete-orphan")
     notifications = db.relationship('Notification', backref='student', lazy=True, foreign_keys='Notification.student_id')
     files = db.relationship('File', backref='student', lazy=True, foreign_keys='File.student_id')
+    lesson_type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'), nullable=True)
+    lesson_type = db.relationship('LessonType', backref='students')
     
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
@@ -101,6 +112,7 @@ class Notification(db.Model):
     # For group notifications
     group_name = db.Column(db.String(100), nullable=True)
     lesson_type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'), nullable=True)
+    lesson_type = db.relationship('LessonType', backref='notifications')
     
     # Who sent the notification
     sent_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)

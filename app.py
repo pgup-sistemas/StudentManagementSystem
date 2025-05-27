@@ -1,80 +1,58 @@
+# Este arquivo é o ponto de entrada principal da aplicação
+from __init__ import create_app, db
+from models import User, Student, LessonType, Payment, Notification, File
+import socket
 import os
-import logging
-from flask import Flask, g
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
-from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_login import LoginManager
-from datetime import datetime
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
 
-# Define base class for SQLAlchemy models
-class Base(DeclarativeBase):
-    pass
+app = create_app()
 
-# Initialize Flask app
-app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")  # Use environment variable in production
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
-
-# Set 'now' variable for all templates
-@app.context_processor
-def inject_globals():
-    return {
-        'now': datetime.now()
-    }
-
-# Database configuration
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///music_school.db")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    'pool_pre_ping': True,
-    "pool_recycle": 300,
-}
-
-# File upload configuration
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/uploads/files')
-app.config['TEMP_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/uploads/temp')
-app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB limit
-app.config['ALLOWED_EXTENSIONS'] = {
-    'pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx',  # Documents
-    'jpg', 'jpeg', 'png', 'gif',                 # Images
-    'mp3', 'wav', 'ogg',                         # Audio
-    'mp4', 'avi', 'mov'                          # Video
-}
-
-# Initialize SQLAlchemy
-db = SQLAlchemy(model_class=Base)
-db.init_app(app)
-
-# Configure Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login' # type: ignore
-login_manager.login_message = 'Por favor, faça login para acessar esta página.'
-login_manager.login_message_category = 'warning'
-
-# Import models after db initialization to avoid circular imports
-with app.app_context():
-    from models import User, Student, LessonType, Payment
+if __name__ == '__main__':
+    # Cria as tabelas do banco de dados se não existirem
+    with app.app_context():
+        # Garante que todos os modelos sejam importados
+        print("Criando tabelas do banco de dados...")
+        db.create_all()
+        print("Tabelas criadas com sucesso!")
     
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(int(user_id))
+    # Configurações do servidor
+    HOST = '0.0.0.0'  # Permite acesso de qualquer endereço IP
+    PORT = 5000
     
-    # Create database tables
-    db.create_all()
-    logging.info("Database tables created")
+    # Obtém o endereço IP da máquina na rede local
+    def get_local_ip():
+        try:
+            # Cria um socket para se conectar a um servidor externo
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.settimeout(0.1)
+            # Não é necessário realmente se conectar
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            return ip
+        except Exception as e:
+            print(f"Não foi possível obter o endereço IP local: {e}")
+            return "127.0.0.1"  # Retorna localhost como fallback
     
-    # Create admin user if not exists
-    admin = User.query.filter_by(username='admin').first()
-    if not admin:
-        from werkzeug.security import generate_password_hash
-        admin = User()
-        admin.username = 'admin'
-        admin.password_hash = generate_password_hash('admin')  # Default password, should be changed
-        db.session.add(admin)
-        db.session.commit()
-        logging.info("Admin user created")
+    local_ip = get_local_ip()
+    
+    # Cria o diretório de uploads se não existir
+    upload_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+    
+    # Configura a pasta de uploads no app
+    app.config['UPLOAD_FOLDER'] = upload_folder
+    
+    # Inicia o servidor de desenvolvimento
+    print("\n" + "="*60)
+    print(f"Sistema de Gerenciamento de Alunos")
+    print("="*60)
+    print(f"Acesso local:       http://127.0.0.1:{PORT}")
+    print(f"Acesso na rede:     http://{local_ip}:{PORT}")
+    print("="*60)
+    print("Pressione CTRL+C para encerrar o servidor")
+    print("="*60 + "\n")
+    
+    # Inicia o servidor Flask
+    app.run(host=HOST, port=PORT, debug=True, threaded=True)

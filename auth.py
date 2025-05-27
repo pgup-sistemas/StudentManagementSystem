@@ -1,12 +1,18 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
-from flask_login import login_user, logout_user, login_required
+# auth.py
+from flask import Blueprint, render_template, redirect, url_for, request, flash, session
+from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
-from app import app, db
-from models import User
+from models import User  # Importação absoluta
+from __init__ import db  # Importação absoluta
 
-# Define auth routes
-@app.route('/login', methods=['GET', 'POST'])
+auth_bp = Blueprint('auth', __name__)
+
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    # Clear any existing flash messages
+    if '_flashes' in session:
+        session['_flashes'].clear()
+    
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -22,36 +28,34 @@ def login():
         
         if next_page:
             return redirect(next_page)
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('main.dashboard'))
         
     return render_template('login.html')
 
-@app.route('/logout')
+@auth_bp.route('/logout')
 @login_required
 def logout():
     logout_user()
     flash('Você saiu com sucesso.', 'success')
-    return redirect(url_for('login'))
+    return redirect(url_for('auth.login'))
 
-@app.route('/change_password', methods=['POST'])
+@auth_bp.route('/change_password', methods=['POST'])
 @login_required
 def change_password():
     current_password = request.form.get('current_password')
     new_password = request.form.get('new_password')
     confirm_password = request.form.get('confirm_password')
     
-    from flask_login import current_user
-    
     if not check_password_hash(current_user.password_hash, current_password):
         flash('Senha atual incorreta.', 'danger')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('main.dashboard'))
     
     if new_password != confirm_password:
         flash('As novas senhas não coincidem.', 'danger')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('main.dashboard'))
     
     current_user.password_hash = generate_password_hash(new_password)
     db.session.commit()
     
     flash('Senha alterada com sucesso.', 'success')
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('main.dashboard'))

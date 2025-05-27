@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if payment %}Editar Mensalidade{% else %}Nova Mensalidade{% endif %} - Sistema de Gestão de Alunos e Mensalidades
+    {% if payment %}Editar Mensalidade{% else %}Nova Mensalidade{% endif %} - Sonaris - Sonaris de Alunos e Mensalidades
 {% endblock %}
 
 {% block content %}
@@ -101,7 +101,7 @@
             </div>
             
             <div class="d-flex justify-content-between">
-                <a href="{{ url_for('payments') }}" class="btn btn-secondary">
+                <a href="{{ url_for('main.payments') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Voltar
                 </a>
                 <button type="submit" class="btn btn-primary">

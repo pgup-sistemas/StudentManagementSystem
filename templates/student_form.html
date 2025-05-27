@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if student %}Editar Aluno{% else %}Novo Aluno{% endif %} - Sistema de Gestão de Alunos e Mensalidades
+    {% if student %}Editar Aluno{% else %}Novo Aluno{% endif %} - Sonaris - Sonaris de Alunos e Mensalidades
 {% endblock %}
 
 {% block content %}
@@ -47,8 +47,21 @@
                 <textarea class="form-control" id="notes" name="notes" rows="3">{{ student.notes if student else '' }}</textarea>
             </div>
             
+            <div class="mb-3">
+                <label for="lesson_type_id" class="form-label">Tipo de Aula</label>
+                <select class="form-select" id="lesson_type_id" name="lesson_type_id">
+                    <option value="">Selecione um tipo de aula (opcional)</option>
+                    {% for lesson_type in lesson_types %}
+                        <option value="{{ lesson_type.id }}" {% if student and student.lesson_type_id == lesson_type.id %}selected{% endif %}>
+                            {{ lesson_type.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <small class="form-text text-muted">Selecione o tipo de aula principal deste aluno.</small>
+            </div>
+            
             <div class="d-flex justify-content-between">
-                <a href="{{ url_for('students') }}" class="btn btn-secondary">
+                <a href="{{ url_for('main.students') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Voltar
                 </a>
                 <button type="submit" class="btn btn-primary">

@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Enviar Arquivo - Sonaris - Sistema de Gestão de Alunos e Mensalidades{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3 class="card-title">
+            <i class="fas fa-upload"></i> Enviar Arquivo
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <div class="mb-3">
+                <label for="file" class="form-label">Arquivo <span class="text-danger">*</span></label>
+                <input class="form-control" type="file" id="file" name="file" required>
+                <div class="form-text">
+                    Tipos permitidos: .jpg, .jpeg, .png, .gif, .pdf, .doc, .docx, .xls, .xlsx, .mp3, .wav, .mp4, .avi
+                </div>
+                <div class="invalid-feedback">
+                    Por favor, selecione um arquivo para enviar.
+                </div>
+                <div id="fileError" class="text-danger small mt-1 d-none">
+                    Tipo de arquivo não permitido. Use apenas os tipos listados acima.
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="name" class="form-label">Nome do Arquivo</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="Deixe em branco para usar o nome original">
+                <div class="form-text">
+                    Se não preenchido, será usado o nome original do arquivo.
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">Descrição</label>
+                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Adicione uma descrição opcional"></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label">Destinatário</label>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="recipient_type" id="recipient_all" value="all" checked>
+                        <label class="form-check-label" for="recipient_all">
+                            Todos os alunos
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="recipient_type" id="recipient_student" value="student">
+                        <label class="form-check-label" for="recipient_student">
+                            Aluno específico
+                        </label>
+                    </div>
+                    <select class="form-select mt-2" id="student_id" name="student_id" disabled required>
+                        <option value="">Selecione um aluno...</option>
+                        {% for student in students %}
+                        <option value="{{ student.id }}">{{ student.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">
+                        Por favor, selecione um aluno.
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="recipient_type" id="recipient_lesson_type" value="lesson_type">
+                        <label class="form-check-label" for="recipient_lesson_type">
+                            Alunos por tipo de aula
+                        </label>
+                    </div>
+                    <select class="form-select mt-2" id="lesson_type_id" name="lesson_type_id" disabled required>
+                        <option value="">Selecione um tipo de aula...</option>
+                        {% for lesson_type in lesson_types %}
+                        <option value="{{ lesson_type.id }}">{{ lesson_type.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">
+                        Por favor, selecione um tipo de aula.
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="recipient_type" id="recipient_group" value="group">
+                        <label class="form-check-label" for="recipient_group">
+                            Grupo personalizado
+                        </label>
+                    </div>
+                    <input type="text" class="form-control mt-2" id="group_name" name="group_name" 
+                           placeholder="Digite o nome do grupo" disabled required>
+                    <div class="invalid-feedback">
+                        Por favor, insira um nome para o grupo.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('main.files') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Enviar Arquivo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Ativar/desativar campos de acordo com o tipo de destinatário selecionado
+    document.querySelectorAll('input[name="recipient_type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const studentSelect = document.getElementById('student_id');
+            const lessonTypeSelect = document.getElementById('lesson_type_id');
+            const groupNameInput = document.getElementById('group_name');
+            
+            studentSelect.disabled = this.value !== 'student';
+            lessonTypeSelect.disabled = this.value !== 'lesson_type';
+            groupNameInput.disabled = this.value !== 'group';
+            
+            // Limpar valores quando desabilitados
+            if (studentSelect.disabled) studentSelect.value = '0';
+            if (lessonTypeSelect.disabled) lessonTypeSelect.value = '0';
+            if (groupNameInput.disabled) groupNameInput.value = '';
+        });
+    });
+    
+    // Validação do formulário
+    (function() {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                // Validar campos condicionais
+                const recipientType = document.querySelector('input[name="recipient_type"]:checked').value;
+                const studentSelect = document.getElementById('student_id');
+                const lessonTypeSelect = document.getElementById('lesson_type_id');
+                const groupNameInput = document.getElementById('group_name');
+                
+                // Resetar validação
+                studentSelect.setCustomValidity('');
+                lessonTypeSelect.setCustomValidity('');
+                groupNameInput.setCustomValidity('');
+                
+                // Validar campos condicionais
+                if (recipientType === 'student' && !studentSelect.value) {
+                    studentSelect.setCustomValidity('Por favor, selecione um aluno.');
+                } else if (recipientType === 'lesson_type' && !lessonTypeSelect.value) {
+                    lessonTypeSelect.setCustomValidity('Por favor, selecione um tipo de aula.');
+                } else if (recipientType === 'group' && !groupNameInput.value.trim()) {
+                    groupNameInput.setCustomValidity('Por favor, insira um nome para o grupo.');
+                }
+                
+                // Validar tipo de arquivo
+                const fileInput = document.getElementById('file');
+                const fileError = document.getElementById('fileError');
+                if (fileInput.files.length > 0) {
+                    const fileName = fileInput.files[0].name;
+                    const allowedExtensions = new Set(['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'mp3', 'wav', 'mp4', 'avi']);
+                    const fileExt = fileName.split('.').pop().toLowerCase();
+                    
+                    if (!allowedExtensions.has(fileExt)) {
+                        fileError.classList.remove('d-none');
+                        fileInput.setCustomValidity('Tipo de arquivo não permitido');
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        fileError.classList.add('d-none');
+                        fileInput.setCustomValidity('');
+                    }
+                }
+                
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+    
+    // Atualizar o campo de nome com o nome do arquivo quando um arquivo for selecionado
+    document.getElementById('file').addEventListener('change', function() {
+        const fileNameInput = document.getElementById('name');
+        if (this.files.length > 0 && !fileNameInput.value) {
+            // Remove a extensão do nome do arquivo
+            const fileName = this.files[0].name;
+            const lastDot = fileName.lastIndexOf('.');
+            const nameWithoutExt = lastDot === -1 ? fileName : fileName.substring(0, lastDot);
+            fileNameInput.value = nameWithoutExt;
+        }
+    });
+</script>
+{% endblock %}

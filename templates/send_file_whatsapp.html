@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Sonaris - Sistema de Gestão de Alunos e Mensalidades{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">
+                        <i class="fab fa-whatsapp"></i> Enviar Arquivo via WhatsApp
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">{{ file.name }}</h5>
+                        {% if file.description %}
+                            <p class="mb-1">{{ file.description }}</p>
+                        {% endif %}
+                        <p class="mb-0">
+                            <strong>Tipo:</strong> {{ file.file_type | upper }} | 
+                            <strong>Data:</strong> {{ file.upload_date.strftime('%d/%m/%Y %H:%M') }}
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Destinatários ({{ whatsapp_links | length }})</h5>
+                        <p class="text-muted">Clique no botão ao lado do nome do aluno para abrir o WhatsApp.</p>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Aluno</th>
+                                        <th>Telefone</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student, whatsapp_url in whatsapp_links %}
+                                    <tr>
+                                        <td>{{ student.name }}</td>
+                                        <td>{{ student.phone or 'Não informado' }}</td>
+                                        <td>
+                                            <a href="{{ whatsapp_url }}" 
+                                               target="_blank" 
+                                               class="btn btn-sm btn-success"
+                                               title="Abrir WhatsApp">
+                                                <i class="fab fa-whatsapp"></i> Enviar
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('main.files') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar para Arquivos
+                        </a>
+                        <div>
+                            <a href="#" class="btn btn-outline-secondary me-2" id="copyAllLinks">
+                                <i class="far fa-copy"></i> Copiar Todos os Links
+                            </a>
+                            <a href="#" class="btn btn-primary" id="openAllLinks">
+                                <i class="fas fa-external-link-alt"></i> Abrir Todos os WhatsApps
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Abrir todos os links em novas abas
+        document.getElementById('openAllLinks').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Confirmar antes de abrir várias abas
+            if (confirm('Deseja realmente abrir todos os links do WhatsApp em abas separadas?')) {
+                const links = document.querySelectorAll('a[target="_blank"]');
+                links.forEach(link => {
+                    window.open(link.href, '_blank');
+                });
+                
+                // Mostrar mensagem de sucesso
+                alert(`Foram abertas ${links.length} abas do WhatsApp.`);
+            }
+        });
+        
+        // Copiar todos os links para a área de transferência
+        document.getElementById('copyAllLinks').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const links = [];
+            document.querySelectorAll('a[target="_blank"]').forEach(link => {
+                const studentName = link.closest('tr').querySelector('td:first-child').textContent.trim();
+                links.push(`${studentName}: ${link.href}`);
+            });
+            
+            const textToCopy = links.join('\n\n');
+            
+            navigator.clipboard.writeText(textToCopy).then(function() {
+                alert('Links copiados para a área de transferência!');
+            }).catch(function(err) {
+                console.error('Erro ao copiar links: ', err);
+                alert('Não foi possível copiar os links. Por favor, tente novamente.');
+            });
+        });
+    });
+</script>
+{% endblock %}
