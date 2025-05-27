@@ -64,7 +64,7 @@ Sistema Sonaris - Solução completa para gerenciamento de escolas de música, d
 
 7. **Primeiro acesso**
    - **Usuário:** admin
-   - **Senha:** admin
+   - **Senha:** admin123
    
    ⚠️ **Importante:** Altere a senha padrão no primeiro acesso!
 
