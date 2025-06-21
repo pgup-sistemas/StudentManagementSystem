@@ -1,25 +1,44 @@
-# __init__.py
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager
-import os
 from datetime import datetime
-import sqlite3
 
 # Initialize extensions
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+login_manager.login_view = 'auth.login'
+login_manager.login_message = "Por favor, faça o login para acessar esta página."
 
-def create_app():
-    app = Flask(__name__)
+def create_app(config_class=None):
+    # Cria a aplicação Flask com configuração de instância
+    app = Flask(__name__, instance_relative_config=True)
+
+    # Carrega a configuração
+    if config_class:
+        app.config.from_object(config_class)
+    else:
+        # Fallback para configuração padrão
+        app.config.from_object('config.Config')
+
+    # Inicializa configurações específicas do ambiente
+    if hasattr(config_class, 'init_app'):
+        config_class.init_app(app)
+
+    # Cria a pasta de instância se não existir
+    try:
+        os.makedirs(app.instance_path, exist_ok=True)
+    except OSError:
+        pass
     
-    # Basic configuration
-    app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-    
+    # Cria a pasta de uploads se não existir
+    upload_folder = app.config.get('UPLOAD_FOLDER', 'uploads')
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder, exist_ok=True)
+    app.config['UPLOAD_FOLDER'] = upload_folder
+
     # Configuração de upload de arquivos
     app.config['ALLOWED_EXTENSIONS'] = {
         'jpg', 'jpeg', 'png', 'gif',  # Imagens
@@ -29,52 +48,45 @@ def create_app():
         'mp3', 'wav',  # Áudio
         'mp4', 'avi'  # Vídeos
     }
-    
-    # Configuração do diretório de uploads (usando a raiz do projeto para facilitar o acesso)
-    upload_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-    os.makedirs(upload_folder, exist_ok=True)
-    app.config['UPLOAD_FOLDER'] = upload_folder
-    print(f"Diretório de uploads configurado em: {upload_folder}")
-    
-    # Configurações para URLs externas
-    app.config['PREFERRED_URL_SCHEME'] = 'http'  # Usar 'https' em produção com SSL
-    app.config['SERVER_NAME'] = None  # Será configurado dinamicamente no app.py
-    
-    # Ensure instance folder exists
-    os.makedirs(app.instance_path, exist_ok=True)
-    
-    # Database configuration
-    db_path = os.path.join(app.instance_path, 'music_school.db')
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        'pool_pre_ping': True,
-        "pool_recycle": 300,
-    }
-    
+
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'
-    login_manager.login_message = 'Por favor, faça login para acessar esta página.'
-    login_manager.login_message_category = 'warning'
     
     @login_manager.user_loader
     def load_user(user_id):
-        from models import User  # Importação absoluta
+        from .models import User
         return User.query.get(int(user_id))
-    
-    # Register blueprints
-    from auth import auth_bp  # Importação absoluta
-    from routes import main_bp  # Importação absoluta
-    
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(main_bp)
-    
-    # Context processor
-    @app.context_processor
-    def inject_globals():
-        return {'now': datetime.now()}
-    
-    return app
+
+    # Configurar sessão permanente
+    app.config['PERMANENT_SESSION_LIFETIME'] = app.config.get('PERMANENT_SESSION_LIFETIME', 28800)  # 8 horas
+
+    with app.app_context():
+        # Importa as rotas e blueprints
+        from . import routes, auth, models
+
+        # Registra o blueprint de autenticação
+        app.register_blueprint(auth.bp)
+        
+        # Registra o blueprint das rotas principais
+        app.register_blueprint(routes.bp)
+        
+        # Context processor para variáveis globais
+        @app.context_processor
+        def inject_globals():
+            return {'now': datetime.now()}
+
+        # Error handlers
+        @app.errorhandler(404)
+        def not_found_error(error):
+            from flask import render_template
+            return render_template('errors/404.html'), 404
+
+        @app.errorhandler(500)
+        def internal_error(error):
+            from flask import render_template
+            db.session.rollback()
+            return render_template('errors/500.html'), 500
+
+    return app 

@@ -19,14 +19,14 @@ from reportlab.pdfgen import canvas
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.drawing.image import Image as XLSXImage
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt  # Temporariamente comentado devido a problemas de instalação
 import tempfile
 import os
 
-from models import Student, LessonType, Payment, Notification, File
-from __init__ import db
+from .models import Student, LessonType, Payment, Notification, File
+from . import db
 
-main_bp = Blueprint('main', __name__)
+bp = Blueprint('main', __name__)
 
 # Month names in Portuguese
 MONTH_NAMES = {
@@ -105,13 +105,13 @@ def save_file(file):
                 pass
         raise
 
-@main_bp.route('/')
+@bp.route('/')
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
     return redirect(url_for('auth.login'))
 
-@main_bp.route('/dashboard')
+@bp.route('/dashboard')
 @login_required
 def dashboard():
     # Get current month and year
@@ -172,7 +172,7 @@ def dashboard():
         current_year=current_year
     )
 
-@main_bp.route('/dashboard/chart-data')
+@bp.route('/dashboard/chart-data')
 @login_required
 def dashboard_chart_data():
     """Retorna dados para o gráfico do dashboard"""
@@ -290,7 +290,7 @@ def get_dashboard_data(year, month=None, lesson_type_id=None):
         'current_year': datetime.now().year
     }
 
-@main_bp.route('/dashboard/export/excel')
+@bp.route('/dashboard/export/excel')
 @login_required
 def export_dashboard_excel():
     """Exporta os dados do dashboard para Excel"""
@@ -364,7 +364,7 @@ def export_dashboard_excel():
         flash('Erro ao gerar o arquivo Excel. Por favor, tente novamente.', 'danger')
         return redirect(url_for('main.dashboard'))
 
-@main_bp.route('/dashboard/export/pdf')
+@bp.route('/dashboard/export/pdf')
 @login_required
 def export_dashboard_pdf():
     """Exporta os dados do dashboard para PDF"""
@@ -585,7 +585,7 @@ def export_dashboard_pdf():
         return redirect(url_for('main.dashboard'))
 
 # ========= Student Routes =========
-@main_bp.route('/students')
+@bp.route('/students')
 @login_required
 def students():
     # Número de itens por página
@@ -617,7 +617,7 @@ def students():
                          pagination=students_pagination,
                          search=request.args.get('search', ''))
 
-@main_bp.route('/students/new', methods=['GET', 'POST'])
+@bp.route('/students/new', methods=['GET', 'POST'])
 @login_required
 def new_student():
     # Obter todos os tipos de aula para o formulário
@@ -628,7 +628,7 @@ def new_student():
         birth_date_str = request.form.get('birth_date')
         phone = request.form.get('phone')
         notes = request.form.get('notes')
-        lesson_type_id = request.form.get('lesson_type_id')
+        lesson_type_ids = request.form.getlist('lesson_type_ids')  # Lista de IDs selecionados
         
         # Simple validation
         if not name or not birth_date_str or not phone:
@@ -647,9 +647,13 @@ def new_student():
         student.phone = phone
         student.notes = notes
         
-        # Definir o tipo de aula se foi selecionado
-        if lesson_type_id and lesson_type_id.isdigit():
-            student.lesson_type_id = int(lesson_type_id)
+        # Adicionar os tipos de aula selecionados
+        if lesson_type_ids:
+            for lesson_type_id in lesson_type_ids:
+                if lesson_type_id.isdigit():
+                    lesson_type = LessonType.query.get(int(lesson_type_id))
+                    if lesson_type:
+                        student.lesson_types.append(lesson_type)
         
         db.session.add(student)
         db.session.commit()
@@ -659,7 +663,7 @@ def new_student():
     
     return render_template('student_form.html', lesson_types=lesson_types_list)
 
-@main_bp.route('/students/<int:id>/edit', methods=['GET', 'POST'])
+@bp.route('/students/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_student(id):
     student = Student.query.get_or_404(id)
@@ -671,7 +675,7 @@ def edit_student(id):
         birth_date_str = request.form.get('birth_date')
         phone = request.form.get('phone')
         notes = request.form.get('notes')
-        lesson_type_id = request.form.get('lesson_type_id')
+        lesson_type_ids = request.form.getlist('lesson_type_ids')  # Lista de IDs selecionados
         
         # Simple validation
         if not name or not birth_date_str or not phone:
@@ -689,11 +693,14 @@ def edit_student(id):
         student.phone = phone
         student.notes = notes
         
-        # Atualizar o tipo de aula
-        if lesson_type_id and lesson_type_id.isdigit():
-            student.lesson_type_id = int(lesson_type_id)
-        else:
-            student.lesson_type_id = None
+        # Atualizar os tipos de aula
+        student.lesson_types.clear()  # Remove todos os tipos atuais
+        if lesson_type_ids:
+            for lesson_type_id in lesson_type_ids:
+                if lesson_type_id.isdigit():
+                    lesson_type = LessonType.query.get(int(lesson_type_id))
+                    if lesson_type:
+                        student.lesson_types.append(lesson_type)
         
         db.session.commit()
         
@@ -702,7 +709,7 @@ def edit_student(id):
     
     return render_template('student_form.html', student=student, lesson_types=lesson_types_list)
 
-@main_bp.route('/students/<int:id>/delete', methods=['POST'])
+@bp.route('/students/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_student(id):
     student = Student.query.get_or_404(id)
@@ -718,13 +725,26 @@ def delete_student(id):
     return redirect(url_for('students'))
 
 # ========= Lesson Type Routes =========
-@main_bp.route('/lesson-types')
+@bp.route('/lesson-types')
 @login_required
 def lesson_types():
-    types_list = LessonType.query.order_by(LessonType.name).all()
-    return render_template('lesson_types.html', lesson_types=types_list)
+    # Número de itens por página
+    per_page = 10
+    
+    # Página atual (padrão: 1)
+    page = request.args.get('page', 1, type=int)
+    
+    # Consulta base
+    query = LessonType.query
+    
+    # Ordenar e paginar
+    types_pagination = query.order_by(LessonType.name).paginate(page=page, per_page=per_page, error_out=False)
+    
+    return render_template('lesson_types.html', 
+                         lesson_types=types_pagination.items,
+                         pagination=types_pagination)
 
-@main_bp.route('/lesson-types/new', methods=['GET', 'POST'])
+@bp.route('/lesson-types/new', methods=['GET', 'POST'])
 @login_required
 def new_lesson_type():
     if request.method == 'POST':
@@ -758,7 +778,7 @@ def new_lesson_type():
     
     return render_template('lesson_type_form.html')
 
-@main_bp.route('/lesson-types/<int:id>/edit', methods=['GET', 'POST'])
+@bp.route('/lesson-types/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_lesson_type(id):
     lesson_type = LessonType.query.get_or_404(id)
@@ -792,7 +812,7 @@ def edit_lesson_type(id):
     
     return render_template('lesson_type_form.html', lesson_type=lesson_type)
 
-@main_bp.route('/lesson-types/<int:id>/delete', methods=['POST'])
+@bp.route('/lesson-types/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_lesson_type(id):
     lesson_type = LessonType.query.get_or_404(id)
@@ -809,21 +829,27 @@ def delete_lesson_type(id):
 
 # ========= Notification Routes =========
 
-@main_bp.route('/notifications')
+@bp.route('/notifications')
 @login_required
 def notifications():
     """Lista todas as notificações"""
     from sqlalchemy.orm import joinedload
     
-    # Carregar as notificações com os relacionamentos necessários
-    notifications_list = Notification.query\
-        .options(
-            joinedload(Notification.student),
-            joinedload(Notification.lesson_type),
-            joinedload(Notification.sent_by)
-        )\
-        .order_by(Notification.sent_date.desc())\
-        .all()
+    # Número de itens por página
+    per_page = 15
+    
+    # Página atual (padrão: 1)
+    page = request.args.get('page', 1, type=int)
+    
+    # Consulta base
+    query = Notification.query.options(
+        joinedload(Notification.student),
+        joinedload(Notification.lesson_type),
+        joinedload(Notification.sent_by)
+    )
+    
+    # Ordenar e paginar
+    notifications_pagination = query.order_by(Notification.sent_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
     
     # Carregar alunos e tipos de aula para o formulário
     students = Student.query.order_by(Student.name).all()
@@ -831,13 +857,14 @@ def notifications():
     
     return render_template(
         'notifications.html',
-        notifications=notifications_list,
+        notifications=notifications_pagination.items,
+        pagination=notifications_pagination,
         students=students,
         lesson_types=lesson_types,
         title='Notificações'
     )
 
-@main_bp.route('/notifications/new', methods=['GET', 'POST'])
+@bp.route('/notifications/new', methods=['GET', 'POST'])
 @login_required
 def new_notification():
     """Cria uma nova notificação"""
@@ -887,7 +914,7 @@ def new_notification():
         title='Nova Notificação'
     )
 
-@main_bp.route('/notifications/<int:id>/delete', methods=['POST'])
+@bp.route('/notifications/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_notification(id):
     """Exclui uma notificação"""
@@ -903,7 +930,7 @@ def delete_notification(id):
     
     return redirect(url_for('main.notifications'))
 
-@main_bp.route('/notifications/<int:id>/send', methods=['GET'])
+@bp.route('/notifications/<int:id>/send', methods=['GET'])
 @login_required
 def send_notification(id):
     """Envia uma notificação via WhatsApp"""
@@ -980,9 +1007,15 @@ def send_notification(id):
         return redirect(url_for('main.notifications'))
 
 # ========= Payment Routes =========
-@main_bp.route('/payments')
+@bp.route('/payments')
 @login_required
 def payments():
+    # Número de itens por página
+    per_page = 15
+    
+    # Página atual (padrão: 1)
+    page = request.args.get('page', 1, type=int)
+    
     # Get filter parameters
     student_id = request.args.get('student_id', type=int)
     month = request.args.get('month', type=int)
@@ -1003,11 +1036,11 @@ def payments():
         query = query.filter(Payment.status == status)
     
     # Order by year (desc), month (desc), and student name
-    payments_list = query.join(Student).order_by(
+    payments_pagination = query.join(Student).order_by(
         Payment.reference_year.desc(),
         Payment.reference_month.desc(),
         Student.name
-    ).all()
+    ).paginate(page=page, per_page=per_page, error_out=False)
     
     # Get students for filter dropdown
     students = Student.query.order_by(Student.name).all()
@@ -1018,7 +1051,8 @@ def payments():
     
     return render_template(
         'payments.html',
-        payments=payments_list,
+        payments=payments_pagination.items,
+        pagination=payments_pagination,
         students=students,
         months=MONTH_NAMES,
         years=years,
@@ -1028,7 +1062,7 @@ def payments():
         selected_status=status
     )
 
-@main_bp.route('/payments/new', methods=['GET', 'POST'])
+@bp.route('/payments/new', methods=['GET', 'POST'])
 @login_required
 def new_payment():
     if request.method == 'POST':
@@ -1099,7 +1133,7 @@ def new_payment():
     
     return render_template('payment_form.html', students=students, lesson_types=lesson_types, months=MONTH_NAMES, years=years)
 
-@main_bp.route('/payments/<int:id>/edit', methods=['GET', 'POST'])
+@bp.route('/payments/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_payment(id):
     payment = Payment.query.get_or_404(id)
@@ -1181,7 +1215,7 @@ def edit_payment(id):
     
     return render_template('payment_form.html', payment=payment, students=students, lesson_types=lesson_types, months=MONTH_NAMES, years=years)
 
-@main_bp.route('/payments/<int:id>/delete', methods=['POST'])
+@bp.route('/payments/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_payment(id):
     payment = Payment.query.get_or_404(id)
@@ -1192,7 +1226,7 @@ def delete_payment(id):
     flash('Mensalidade excluída com sucesso!', 'success')
     return redirect(url_for('main.payments'))
 
-@main_bp.route('/payments/<int:id>/toggle-status', methods=['POST'])
+@bp.route('/payments/<int:id>/toggle-status', methods=['POST'])
 @login_required
 def toggle_payment_status(id):
     payment = Payment.query.get_or_404(id)
@@ -1218,7 +1252,7 @@ def toggle_payment_status(id):
     
     return redirect(url_for('main.payments'))
 
-@main_bp.route('/payments/<int:id>/receipt')
+@bp.route('/payments/<int:id>/receipt')
 @login_required
 def payment_receipt(id):
     payment = Payment.query.get_or_404(id)
@@ -1264,7 +1298,32 @@ def payment_receipt(id):
         message=message
     )
 
-@main_bp.route('/get-lesson-type-price/<int:id>')
+@bp.route('/get-student-lesson-types/<int:student_id>')
+@login_required
+def get_student_lesson_types(student_id):
+    """Retorna os tipos de aula de um aluno específico via AJAX"""
+    try:
+        student = Student.query.get_or_404(student_id)
+        lesson_types = []
+        
+        for lesson_type in student.lesson_types:
+            lesson_types.append({
+                'id': lesson_type.id,
+                'name': lesson_type.name,
+                'default_price': lesson_type.default_price
+            })
+        
+        return jsonify({
+            'success': True,
+            'lesson_types': lesson_types
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@bp.route('/get-lesson-type-price/<int:id>')
 @login_required
 def get_lesson_type_price(id):
     lesson_type = LessonType.query.get_or_404(id)
@@ -1272,10 +1331,16 @@ def get_lesson_type_price(id):
 
 # ========= File Management Routes =========
 
-@main_bp.route('/files')
+@bp.route('/files')
 @login_required
 def files():
     """Lista todos os arquivos com filtros"""
+    # Número de itens por página
+    per_page = 15
+    
+    # Página atual (padrão: 1)
+    page = request.args.get('page', 1, type=int)
+    
     query = File.query
     
     # Filtro por aluno
@@ -1302,8 +1367,8 @@ def files():
         elif file_type == 'video':
             query = query.filter(File.file_type.in_(['mp4', 'avi']))
     
-    # Ordena por data de upload (mais recentes primeiro)
-    files_list = query.order_by(File.upload_date.desc()).all()
+    # Ordena por data de upload (mais recentes primeiro) e pagina
+    files_pagination = query.order_by(File.upload_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
     
     # Obtém listas para os filtros
     students = Student.query.order_by(Student.name).all()
@@ -1311,7 +1376,8 @@ def files():
     
     return render_template(
         'files.html',
-        files=files_list,
+        files=files_pagination.items,
+        pagination=files_pagination,
         students=students,
         lesson_types=lesson_types,
         title='Arquivos',
@@ -1322,7 +1388,7 @@ def files():
         }
     )
 
-@main_bp.route('/files/upload', methods=['GET', 'POST'])
+@bp.route('/files/upload', methods=['GET', 'POST'])
 @login_required
 def upload_file():
     """Faz upload de um novo arquivo"""
@@ -1434,7 +1500,7 @@ def upload_file():
         title='Enviar Arquivo'
     )
 
-@main_bp.route('/files/<int:id>/delete', methods=['POST'])
+@bp.route('/files/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_file(id):
     """Exclui um arquivo"""
@@ -1456,7 +1522,7 @@ def delete_file(id):
     
     return redirect(url_for('main.files'))
 
-@main_bp.route('/files/<int:id>/download')
+@bp.route('/files/<int:id>/download')
 @login_required
 def download_file(id):
     """Faz o download de um arquivo"""
@@ -1477,7 +1543,7 @@ def download_file(id):
         flash(f'Erro ao fazer download do arquivo: {str(e)}', 'danger')
         return redirect(url_for('main.files'))
 
-@main_bp.route('/files/<int:id>/send', methods=['GET'])
+@bp.route('/files/<int:id>/send', methods=['GET'])
 @login_required
 def send_file_whatsapp(id):
     """Envia um arquivo via WhatsApp para os destinatários"""

@@ -1,6 +1,6 @@
 from datetime import datetime
 import os
-from __init__ import db  # Importação absoluta
+from . import db  # Importação relativa
 from flask_login import UserMixin
 
 
@@ -42,8 +42,9 @@ class Student(db.Model):
     payments = db.relationship('Payment', backref='student', lazy=True, cascade="all, delete-orphan")
     notifications = db.relationship('Notification', backref='student', lazy=True, foreign_keys='Notification.student_id')
     files = db.relationship('File', backref='student', lazy=True, foreign_keys='File.student_id')
-    lesson_type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'), nullable=True)
-    lesson_type = db.relationship('LessonType', backref='students')
+    
+    # Many-to-many relationship with LessonType
+    lesson_types = db.relationship('LessonType', secondary='student_lesson_types', backref='enrolled_students')
     
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
@@ -59,6 +60,13 @@ class Student(db.Model):
         if not clean_phone.startswith('55'):
             clean_phone = '55' + clean_phone
         return f"https://wa.me/{clean_phone}?text={message}"
+
+# Tabela de associação para relacionamento many-to-many entre Student e LessonType
+student_lesson_types = db.Table('student_lesson_types',
+    db.Column('student_id', db.Integer, db.ForeignKey('students.id'), primary_key=True),
+    db.Column('lesson_type_id', db.Integer, db.ForeignKey('lesson_types.id'), primary_key=True),
+    db.Column('enrollment_date', db.DateTime, default=datetime.now)
+)
 
 class LessonType(db.Model):
     __tablename__ = 'lesson_types'

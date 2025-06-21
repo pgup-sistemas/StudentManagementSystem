@@ -48,16 +48,25 @@
             </div>
             
             <div class="mb-3">
-                <label for="lesson_type_id" class="form-label">Tipo de Aula</label>
-                <select class="form-select" id="lesson_type_id" name="lesson_type_id">
-                    <option value="">Selecione um tipo de aula (opcional)</option>
+                <label class="form-label">Tipos de Aula</label>
+                <div class="border rounded p-3">
                     {% for lesson_type in lesson_types %}
-                        <option value="{{ lesson_type.id }}" {% if student and student.lesson_type_id == lesson_type.id %}selected{% endif %}>
-                            {{ lesson_type.name }}
-                        </option>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   id="lesson_type_{{ lesson_type.id }}" 
+                                   name="lesson_type_ids" 
+                                   value="{{ lesson_type.id }}"
+                                   {% if student and lesson_type in student.lesson_types %}checked{% endif %}>
+                            <label class="form-check-label" for="lesson_type_{{ lesson_type.id }}">
+                                {{ lesson_type.name }}
+                                {% if lesson_type.description %}
+                                    <small class="text-muted"> - {{ lesson_type.description }}</small>
+                                {% endif %}
+                            </label>
+                        </div>
                     {% endfor %}
-                </select>
-                <small class="form-text text-muted">Selecione o tipo de aula principal deste aluno.</small>
+                </div>
+                <small class="form-text text-muted">Selecione todos os tipos de aula em que o aluno está matriculado.</small>
             </div>
             
             <div class="d-flex justify-content-between">

@@ -14,13 +14,26 @@
     </div>
     <div class="card-body">
         <form method="post" class="needs-validation" novalidate>
-            <div class="row">
-                <div class="col-md-6 mb-3">
+            <!-- Seção: Informações do Aluno -->
+            <div class="mb-4 form-section">
+                <h5 class="text-primary mb-3">
+                    <i class="fas fa-user-graduate"></i> Informações do Aluno
+                </h5>
+                
+                <div class="mb-3">
+                    <label for="student_search" class="form-label">
+                        <i class="fas fa-search"></i> Buscar Aluno
+                    </label>
+                    <input type="text" class="form-control search-field" id="student_search" placeholder="Digite o nome do aluno para filtrar...">
+                    <small class="form-text text-muted">Digite para filtrar a lista de alunos abaixo.</small>
+                </div>
+                
+                <div class="mb-3">
                     <label for="student_id" class="form-label">Aluno <span class="text-danger">*</span></label>
                     <select class="form-select" id="student_id" name="student_id" required>
                         <option value="">Selecione o aluno</option>
                         {% for student in students %}
-                        <option value="{{ student.id }}" {% if payment and payment.student_id == student.id %}selected{% endif %}>
+                        <option value="{{ student.id }}" data-name="{{ student.name.lower() }}" {% if payment and payment.student_id == student.id %}selected{% endif %}>
                             {{ student.name }}
                         </option>
                         {% endfor %}
@@ -29,70 +42,93 @@
                         Por favor, selecione um aluno.
                     </div>
                 </div>
+            </div>
+            
+            <!-- Seção: Informações da Mensalidade -->
+            <div class="mb-4 form-section">
+                <h5 class="text-primary mb-3">
+                    <i class="fas fa-chalkboard-teacher"></i> Informações da Mensalidade
+                </h5>
                 
-                <div class="col-md-6 mb-3">
-                    <label for="lesson_type_id" class="form-label">Tipo de Aula <span class="text-danger">*</span></label>
-                    <select class="form-select" id="lesson_type_id" name="lesson_type_id" required>
-                        <option value="">Selecione o tipo de aula</option>
-                        {% for type in lesson_types %}
-                        <option value="{{ type.id }}" data-default-price="{{ type.default_price or '' }}" {% if payment and payment.lesson_type_id == type.id %}selected{% endif %}>
-                            {{ type.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <div class="invalid-feedback">
-                        Por favor, selecione um tipo de aula.
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="lesson_type_id" class="form-label">Tipo de Aula <span class="text-danger">*</span></label>
+                        <select class="form-select" id="lesson_type_id" name="lesson_type_id" required disabled>
+                            <option value="">Selecione primeiro um aluno</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Por favor, selecione um tipo de aula.
+                        </div>
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle"></i> Carregado automaticamente baseado na matrícula do aluno.
+                        </small>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="amount" class="form-label">Valor <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" class="form-control" id="amount" name="amount" value="{{ '%.2f'|format(payment.amount)|replace('.', ',') if payment else '' }}" placeholder="0,00" required>
+                        </div>
+                        <div class="invalid-feedback">
+                            Por favor, informe o valor da mensalidade.
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="reference_month" class="form-label">Mês de Referência <span class="text-danger">*</span></label>
-                    <select class="form-select" id="reference_month" name="reference_month" required>
-                        {% for month_num, month_name in months.items() %}
-                        <option value="{{ month_num }}" {% if payment and payment.reference_month == month_num %}selected{% elif not payment and month_num == now.month %}selected{% endif %}>
-                            {{ month_name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <div class="invalid-feedback">
-                        Por favor, selecione o mês de referência.
-                    </div>
-                </div>
+            <!-- Seção: Período de Referência -->
+            <div class="mb-4 form-section">
+                <h5 class="text-primary mb-3">
+                    <i class="fas fa-calendar-alt"></i> Período de Referência
+                </h5>
                 
-                <div class="col-md-6 mb-3">
-                    <label for="reference_year" class="form-label">Ano de Referência <span class="text-danger">*</span></label>
-                    <select class="form-select" id="reference_year" name="reference_year" required>
-                        {% for year in years %}
-                        <option value="{{ year }}" {% if payment and payment.reference_year == year %}selected{% elif not payment and year == now.year %}selected{% endif %}>
-                            {{ year }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <div class="invalid-feedback">
-                        Por favor, selecione o ano de referência.
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="reference_month" class="form-label">Mês <span class="text-danger">*</span></label>
+                        <select class="form-select" id="reference_month" name="reference_month" required>
+                            {% for month_num, month_name in months.items() %}
+                            <option value="{{ month_num }}" {% if payment and payment.reference_month == month_num %}selected{% elif not payment and month_num == now.month %}selected{% endif %}>
+                                {{ month_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Por favor, selecione o mês de referência.
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="reference_year" class="form-label">Ano <span class="text-danger">*</span></label>
+                        <select class="form-select" id="reference_year" name="reference_year" required>
+                            {% for year in years %}
+                            <option value="{{ year }}" {% if payment and payment.reference_year == year %}selected{% elif not payment and year == now.year %}selected{% endif %}>
+                                {{ year }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Por favor, selecione o ano de referência.
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="amount" class="form-label">Valor <span class="text-danger">*</span></label>
-                    <div class="input-group">
-                        <span class="input-group-text">R$</span>
-                        <input type="text" class="form-control" id="amount" name="amount" value="{{ '%.2f'|format(payment.amount)|replace('.', ',') if payment else '' }}" placeholder="0,00" required>
-                    </div>
-                    <div class="invalid-feedback">
-                        Por favor, informe o valor da mensalidade.
-                    </div>
-                </div>
+            <!-- Seção: Status do Pagamento -->
+            <div class="mb-4 form-section">
+                <h5 class="text-primary mb-3">
+                    <i class="fas fa-credit-card"></i> Status do Pagamento
+                </h5>
                 
-                <div class="col-md-6 mb-3">
+                <div class="mb-3">
                     <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                     <select class="form-select" id="status" name="status" required>
-                        <option value="Pendente" {% if not payment or payment.status == 'Pendente' %}selected{% endif %}>Pendente</option>
-                        <option value="Pago" {% if payment and payment.status == 'Pago' %}selected{% endif %}>Pago</option>
+                        <option value="Pendente" {% if not payment or payment.status == 'Pendente' %}selected{% endif %}>
+                            <i class="fas fa-clock"></i> Pendente
+                        </option>
+                        <option value="Pago" {% if payment and payment.status == 'Pago' %}selected{% endif %}>
+                            <i class="fas fa-check"></i> Pago
+                        </option>
                     </select>
                     <div class="invalid-feedback">
                         Por favor, selecione o status da mensalidade.
@@ -100,12 +136,13 @@
                 </div>
             </div>
             
+            <!-- Botões de Ação -->
             <div class="d-flex justify-content-between">
                 <a href="{{ url_for('main.payments') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Voltar
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Salvar
+                    <i class="fas fa-save"></i> Salvar Mensalidade
                 </button>
             </div>
         </form>
@@ -142,25 +179,123 @@
         this.value = value.replace('.', ',');
     });
     
+    // Load lesson types when student is selected
+    document.getElementById('student_id').addEventListener('change', function() {
+        const studentId = this.value;
+        const lessonTypeSelect = document.getElementById('lesson_type_id');
+        const amountInput = document.getElementById('amount');
+        
+        // Reset lesson type select
+        lessonTypeSelect.innerHTML = '<option value="">Carregando tipos de aula...</option>';
+        lessonTypeSelect.disabled = true;
+        
+        if (!studentId) {
+            lessonTypeSelect.innerHTML = '<option value="">Selecione primeiro um aluno</option>';
+            lessonTypeSelect.disabled = true;
+            amountInput.value = '';
+            return;
+        }
+        
+        // Fetch lesson types for the selected student
+        fetch(`/get-student-lesson-types/${studentId}`)
+            .then(response => response.json())
+            .then(data => {
+                lessonTypeSelect.innerHTML = '<option value="">Selecione o tipo de aula</option>';
+                
+                if (data.success && data.lesson_types.length > 0) {
+                    data.lesson_types.forEach(lessonType => {
+                        const option = document.createElement('option');
+                        option.value = lessonType.id;
+                        option.textContent = lessonType.name;
+                        option.setAttribute('data-default-price', lessonType.default_price || '');
+                        lessonTypeSelect.appendChild(option);
+                    });
+                    lessonTypeSelect.disabled = false;
+                } else {
+                    lessonTypeSelect.innerHTML = '<option value="">Nenhum tipo de aula encontrado para este aluno</option>';
+                    lessonTypeSelect.disabled = true;
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar tipos de aula:', error);
+                lessonTypeSelect.innerHTML = '<option value="">Erro ao carregar tipos de aula</option>';
+                lessonTypeSelect.disabled = true;
+            });
+    });
+    
     // Auto-fill amount when selecting lesson type
     document.getElementById('lesson_type_id').addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         const defaultPrice = selectedOption.getAttribute('data-default-price');
         
         if (defaultPrice) {
-            document.getElementById('amount').value = defaultPrice.replace('.', ',');
+            document.getElementById('amount').value = defaultPrice.toString().replace('.', ',');
         }
     });
     
-    // Trigger the change event on page load if a lesson type is already selected
+    // Initialize form when DOM is loaded
     window.addEventListener('DOMContentLoaded', (event) => {
+        const studentSelect = document.getElementById('student_id');
         const lessonTypeSelect = document.getElementById('lesson_type_id');
-        if (lessonTypeSelect.value) {
-            // If there's no amount set yet, fill it
-            const amountInput = document.getElementById('amount');
-            if (!amountInput.value) {
-                lessonTypeSelect.dispatchEvent(new Event('change'));
+        const amountInput = document.getElementById('amount');
+        const studentSearch = document.getElementById('student_search');
+        
+        // Student search functionality
+        studentSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const options = studentSelect.querySelectorAll('option');
+            
+            // Always show the first option (placeholder)
+            if (options.length > 0) {
+                options[0].style.display = '';
             }
+            
+            // Filter other options
+            for (let i = 1; i < options.length; i++) {
+                const option = options[i];
+                const studentName = option.getAttribute('data-name') || option.textContent.toLowerCase();
+                
+                if (studentName.includes(searchTerm)) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+            
+            // If search is cleared, show all options
+            if (searchTerm === '') {
+                options.forEach(option => {
+                    option.style.display = '';
+                });
+            }
+        });
+        
+        // Clear search when student is selected
+        studentSelect.addEventListener('change', function() {
+            if (this.value) {
+                studentSearch.value = '';
+                // Show all options again
+                const options = this.querySelectorAll('option');
+                options.forEach(option => {
+                    option.style.display = '';
+                });
+            }
+        });
+        
+        // If editing a payment, trigger the student change event to load lesson types
+        if (studentSelect.value && lessonTypeSelect.value) {
+            // Temporarily enable the lesson type select for initialization
+            lessonTypeSelect.disabled = false;
+            
+            // Trigger the student change event to load lesson types
+            studentSelect.dispatchEvent(new Event('change'));
+            
+            // After a short delay, set the correct lesson type and amount
+            setTimeout(() => {
+                if (lessonTypeSelect.value) {
+                    lessonTypeSelect.dispatchEvent(new Event('change'));
+                }
+            }, 500);
         }
     });
 </script>

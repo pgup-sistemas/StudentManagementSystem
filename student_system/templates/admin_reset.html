@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Redefinição do Administrador{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-shield-alt"></i> Redefinição do Administrador
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Atenção:</strong> Esta funcionalidade é apenas para desenvolvimento.
+                        Em produção, use métodos mais seguros.
+                    </div>
+                    
+                    <p class="text-muted mb-4">
+                        Use esta página apenas se você esqueceu a senha do administrador e não consegue acessar o sistema.
+                    </p>
+                    
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="secret_key" class="form-label">Chave secreta</label>
+                            <input type="password" class="form-control" id="secret_key" name="secret_key" required>
+                            <div class="form-text">Chave de segurança para redefinição</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">Nova senha do administrador</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" 
+                                   minlength="6" required>
+                            <div class="form-text">Mínimo 6 caracteres</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirmar nova senha</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                   minlength="6" required>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-user-shield"></i> Redefinir senha do administrador
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-link">
+                            <i class="fas fa-arrow-left"></i> Voltar ao login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Verificar se as senhas coincidem
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('new_password').value;
+    const confirm = this.value;
+    
+    if (password !== confirm) {
+        this.setCustomValidity('As senhas não coincidem');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+</script>
+{% endblock %} 
